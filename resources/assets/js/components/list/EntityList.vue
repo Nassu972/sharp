@@ -125,6 +125,7 @@
 
     import * as qs from '../../helpers/querystring';
     import { parseBlobJSONContent, getFileName } from "../../util";
+    import { mapState, mapGetters } from 'vuex'
 
 
     export default {
@@ -183,6 +184,7 @@
             }
         },
         watch: {
+            '$route': 'init',
             'data.items'(items) {
                 if(items.length) {
                     this.$nextTick(() => this.updateHeaderAutoPadding());
@@ -196,6 +198,9 @@
             }
         },
         computed: {
+            ...mapGetters('entity-list', {
+                getFilterValuesFromQuery: 'filters/getValuesFromQuery'
+            }),
             dragOptions() {
                 return {
                     disabled: !this.reorderActive
@@ -597,42 +602,59 @@
             updateHistory() {
                 history.pushState(this.apiParams, null, qs.serialize(this.apiParams));
             },
-            bindParams(params = this.params) {
-                let { search, page, sort, dir, ...dynamicParams } = params;
-                this.actionsBus.$emit('searchChanged', search, { isInput: false });
-
-                page && (this.page = parseInt(page));
-                sort && (this.sortedBy = sort);
-                dir && (this.sortDir = dir);
-
-                for(let paramKey of Object.keys(dynamicParams)) {
-                    let paramValue = dynamicParams[paramKey];
-                    if(paramKey.indexOf('filter_') === 0) {
-                        let [ _, filterKey ] = paramKey.split('_');
-                        if((this.filterByKey[filterKey]||{}).multiple && paramValue && !Array.isArray(paramValue)) {
-                            paramValue = [paramValue];
-                        }
-                        this.filtersValue[filterKey] = this.filterValueOrDefault(paramValue,this.filterByKey[filterKey]);
-                    }
-                }
-            },
+            // bindParams(params = this.params) {
+            //     let { search, page, sort, dir, ...dynamicParams } = params;
+            //     this.actionsBus.$emit('searchChanged', search, { isInput: false });
+            //
+            //     page && (this.page = parseInt(page));
+            //     sort && (this.sortedBy = sort);
+            //     dir && (this.sortDir = dir);
+            //
+            //     for(let paramKey of Object.keys(dynamicParams)) {
+            //         let paramValue = dynamicParams[paramKey];
+            //         if(paramKey.indexOf('filter_') === 0) {
+            //             let [ _, filterKey ] = paramKey.split('_');
+            //             if((this.filterByKey[filterKey]||{}).multiple && paramValue && !Array.isArray(paramValue)) {
+            //                 paramValue = [paramValue];
+            //             }
+            //             this.filtersValue[filterKey] = this.filterValueOrDefault(paramValue,this.filterByKey[filterKey]);
+            //         }
+            //     }
+            // },
 
             updateHeaderAutoPadding() {
                 if(!this.$refs.actionsCol) return;
                 this.headerAutoPadding = {
                     width: `${this.$refs.actionsCol[0].offsetWidth}px`
                 }
+            },
+
+            async init() {
+                const { page, search, sort, dir } = this.$route.query;
+
+                await this.$store.dispatch('entity-list/results/updateParams', {
+                    page: page && Number(page),
+                    search,
+                    sort,
+                    dir,
+                });
+
+                await this.$store.dispatch('entity-list/get', {
+                    entityKey: this.entityKey,
+                    filterValues: this.getFilterValuesFromQuery(this.$route.query),
+                });
             }
         },
         actions: {
-            searchChanged(input, {isInput=true}={}) {
-                //console.log('entities list search changed', input, isInput);
-
-                this.search = input;
-                if(isInput) {
-                    this.update();
-                }
-            },
+            // searchChanged(input, {isInput=true}={}) {
+            //     //console.log('entities list search changed', input, isInput);
+            //
+            //     this.search = input;
+            //
+            //     if(isInput) {
+            //         this.update();
+            //     }
+            // },
             filterChanged(key, value) {
                 if(this.filterByKey[key].master) {
                     this.filtersValue = Object.keys(this.filtersValue).reduce((res,key)=>({
@@ -664,11 +686,12 @@
             }
         },
         created() {
-            this.get().then(_=>{
-                this.verify();
-                this.bindParams();
-                this.setupActionBar();
-            });
+            // this.get().then(_=>{
+            //     this.verify();
+            //     this.bindParams();
+            //     this.setupActionBar();
+            // });
+            this.init();
 
             window.onpopstate = event => {
                 this.bindParams(event.state);

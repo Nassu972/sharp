@@ -1,7 +1,6 @@
 import filters from '../filters';
 import { getEntityList } from "../../../api";
 
-export const SET_READY = 'SET_READY';
 export const UPDATE = 'UPDATE';
 
 export default {
@@ -30,9 +29,6 @@ export default {
             state.config = config;
             state.authorizations = authorizations;
             state.forms = forms;
-        },
-        [SET_READY](state, ready) {
-            state.ready = ready;
         }
     },
 
@@ -43,7 +39,10 @@ export default {
         ) {
             const data = await getEntityList({
                 entityKey,
-                page, search, sort, dir,
+                page: state.results.page,
+                search: state.results.search,
+                sort: state.results.sort,
+                dir: state.results.dir,
                 filters: getters['filters/getQueryParams'](filterValues),
             });
             commit(UPDATE, {
@@ -54,11 +53,13 @@ export default {
                 authorizations: data.authorizations,
                 forms: data.forms,
             });
-            await dispatch('filters/update', {
-                filters: data.config.filters,
-                values: filterValues
-            });
-            commit(SET_READY, true);
+            await Promise.all([
+                dispatch('results/setResults', data.data),
+                dispatch('filters/update', {
+                    filters: data.config.filters,
+                    values: filterValues,
+                }),
+            ]);
         }
     }
 }

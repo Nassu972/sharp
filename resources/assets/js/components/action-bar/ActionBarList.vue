@@ -100,6 +100,8 @@
     import SharpDropdownItem from '../dropdown/DropdownItem';
     import SharpItemVisual from '../ui/ItemVisual';
 
+    import { mapGetters } from 'vuex';
+
     export default {
         name: 'SharpActionBarList',
         components : {
@@ -145,6 +147,9 @@
             },
             handleSearchFocus() {
                 this.searchActive = true;
+            },
+            handleSearchChanged(search) {
+                this.$router.push({ query:{ ...this.$router.query, search } });
             }
         },
         actions: {
