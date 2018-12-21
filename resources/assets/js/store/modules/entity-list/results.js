@@ -23,6 +23,11 @@ export default {
             state.dir = dir;
         }
     },
+    getters: {
+        count(state) {
+            return (state.results || []).length;
+        }
+    },
     actions: {
         setResults({ commit }, results) {
             commit(SET_RESULTS, results);

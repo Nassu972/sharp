@@ -643,6 +643,8 @@
                     entityKey: this.entityKey,
                     filterValues: this.getFilterValuesFromQuery(this.$route.query),
                 });
+
+                this.ready = true;
             }
         },
         actions: {
@@ -692,11 +694,10 @@
             //     this.setupActionBar();
             // });
             this.init();
-
-            window.onpopstate = event => {
-                this.bindParams(event.state);
-                this.updateData();
-            };
+            // window.onpopstate = event => {
+            //     this.bindParams(event.state);
+            //     this.updateData();
+            // };
 
             window.addEventListener('resize', this.updateHeaderAutoPadding);
         },
