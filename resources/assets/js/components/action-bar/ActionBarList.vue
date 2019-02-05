@@ -58,16 +58,6 @@
                         {{ l('action_bar.list.create_button') }}
                     </button>
                 </template>
-                <template v-if="entityCommands.length">
-                    <sharp-dropdown class="SharpActionBar__actions-dropdown SharpActionBar__actions-dropdown--commands" :show-arrow="false">
-                        <div slot="text">
-                            <i class="fa fa-plus"></i>
-                        </div>
-                        <sharp-dropdown-item v-for="command in entityCommands" @click="emitAction('command', command)" :key="command.key">
-                            {{ command.label }}
-                        </sharp-dropdown-item>
-                    </sharp-dropdown>
-                </template>
             </template>
         </template>
         <template slot="extras">
@@ -87,6 +77,16 @@
                 @input="handleFilterChanged(filter, $event)"
             />
         </template>
+        <template v-if="entityCommands.length" slot="extras-right">
+            <SharpCommandsDropdown class="SharpActionBar__actions-dropdown SharpActionBar__actions-dropdown--commands"
+                :commands="entityCommands"
+                @select="emitAction('command', $event)"
+            >
+                <div slot="text">
+                    {{ l('entity_list.commands.entity.label') }}
+                </div>
+            </SharpCommandsDropdown>
+        </template>
     </sharp-action-bar>
 </template>
 
@@ -101,6 +101,7 @@
     import SharpDropdown from '../dropdown/Dropdown';
     import SharpDropdownItem from '../dropdown/DropdownItem';
     import SharpItemVisual from '../ui/ItemVisual';
+    import SharpCommandsDropdown from '../list/CommandsDropdown';
 
     import { mapState, mapGetters } from 'vuex';
 
@@ -112,7 +113,8 @@
             SharpFilterSelect,
             SharpDropdown,
             SharpDropdownItem,
-            SharpItemVisual
+            SharpItemVisual,
+            SharpCommandsDropdown
         },
 
         mixins: [ActionBarMixin, ActionEvents, Localization],
